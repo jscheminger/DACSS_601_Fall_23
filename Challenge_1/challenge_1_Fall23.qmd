@@ -53,13 +53,23 @@ Find the `_data` folder, then use the correct R command to read the datasets.
 
 ```{r}
 #Type your code here
-setwd(Users/jscheminger/Library/CloudStorage/OneDrive-Personal/Documents/DACSS_Masters/DACSS_601_Fall_23)
+library(tidyverse)
+library(haven) #for loading other datafiles (SAS, STATA, SPSS, etc.)
+
+setwd("/Users/jscheminger/Library/CloudStorage/OneDrive-Personal/Documents/DACSS_Masters/DACSS_601_Fall_23/Challenge_1")
+read.csv("_data/babynames.csv")
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
 ```
 
 2.  **Data Description: Please use the necessary commands and codes and briefly describe this data with a short writing paragraph answering the following questions.**
 
     ```{r}
-    #Type your code here; and write a paragraph answering the questions.
+    #Type your code here; and write a paragraph answering the questions
+    Baby_Names<-read.csv("_data/babynames.csv")
+    dim(Baby_Names)
+    glimpse(Baby_Names)
+    str(Baby_Names)
+    summary(Baby_Names)
     ```
 
     \(1\) What is the dimension of the data (# of rows and columns)?
@@ -74,6 +84,23 @@ setwd(Users/jscheminger/Library/CloudStorage/OneDrive-Personal/Documents/DACSS_M
 
     ```{r}
     #Type your code here; and write a paragraph answering the questions.
+    as_tibble(Baby_Names)
+    unique(Baby_Names$Sex)
+    # 1 - Unique Male Names; Unique Female Names; Total Unique Names
+    #Male Names
+    Male_Names <- dplyr::filter(Baby_Names,Sex == 'Male')
+    view(Male_Names)
+    unique(Male_Names$Name)
+    length(unique(Male_Names$Name))
+    #Female Names
+    Female_Names <- dplyr::filter(Baby_Names,Sex == 'Female')
+    view(Female_Names)
+    unique(Female_Names$Name)
+    length(unique(Female_Names$Name))
+    #Unique Names
+    length(unique(Baby_Names$Name))
+    # 2 - Years of data
+    length(unique(Baby_Names$Year))
     ```
 
     \(1\) How many unique male names, unique female names, and total unique names are in the data?
