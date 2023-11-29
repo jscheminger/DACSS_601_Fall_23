@@ -1,0 +1,135 @@
+---
+title: "Challenge_7: Concepts and Practices of Research Design for a Data Science Project"
+author: "Jeff Scheminger"
+description: "Solutions"
+date: "11/27/2023"
+format:
+  html:
+    df-print: paged
+    css: "styles.css"
+    embed-resources: true
+    self-contained-math: true
+categories:
+  - weekly_challenges
+  - challenge_7
+---
+
+**Make sure you change the author's name in the above YAML header.**
+
+## Setup
+
+If you have not installed the following packages, please install them before loading them.
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(readxl)
+library(haven) #for loading other datafiles (SAS, STATA, SPSS, etc.)
+library(stringr) # if you have not installed this package, please install it.
+library(ggplot2) # if you have not installed this package, please install it.
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+In this challenge, we will apply the knowledge about research design and other topics covered in lectures so far to the dataset presented.
+
+There will be coding components and writing components. Please read the instructions for each part and complete your challenges.
+
+## Part 1. Choose one of the following datasets to do a simple practice of research design and hypothesis testing (50%)
+
+Dataset 1: The General Social Survey (2022). You can find more information about this data project at <https://gss.norc.org/About-The-GSS>. A codebook explaining the definition of each variable and column is also included.
+
+Dataset 2: The Covid-19 Reports in Massachusetts. The datasets are stored in an Excel file of multiple sheets. You can find more information about this data project in the "Introduction", "Definition", "Notes", and "Data Dictionary" tabs in the Excel file.
+
+1.  **Read the data you choose in R. (5%)**
+
+    For GSS, there is only one data sheet (.dta).
+
+    For the MA Covid-19 reports, you can choose **one of the four datasheets(tabs in Excel)** to read ("Weekly Cases and Deaths", "Case and Death Demographics", "County Data", and "City and Town Data").
+
+```{r}
+#type your code here
+
+```
+
+2.  **Answer the following questions.**
+
+    \(1\) what is the structure (dimension) of the data? **(2.5%)**
+
+    ```{r}
+    #type your code here
+    ```
+
+    \(2\) what is the unit of observation? **(2.5%)**
+
+3.  **Read the overview introduction, codebook (for the GSS data), and other related information about the data (for the Covid-19 data). Now browse the data loaded in R, it seems like there are many different questions this data can answer.** **Based on the class lecture and KKV's reading about "good research questions", please propose ONE research question that can be answered using this data. (5%)**
+
+4.  **Based on the research question you proposed above, propose a hypothesis about a possible relationship between two items. (5%)**
+
+5.  **Based on the hypothesis proposed, please select variables/columns in the data to measure the corresponding concepts in the hypothesis statement. You should select at least one variable/column to measure each concept.**
+
+    **You should also specify which variables/columns you choose and explain why they are the proper ones to measure the concepts. (10%)**
+
+    **Instruction:** Don't just answer, "They are reliable and valid". Instead, you should discuss more why they are reliable (can consistently produce the same results regardless of the same results regardless different times and contexts) and valid (why it is better than other possible or alternative variables/columns). You can find the concepts of validity and reliability in the Nov 20 lecture and the slides (p23-25). There are also more in-depth introductions online, such as [this page](http://media.acc.qcc.cuny.edu/faculty/volchok/Measurement_Volchok/Measurement_Volchok6.html).
+
+6.  **Use the code we learned in the previous week to conduct descriptive statistics for the two variables/columns you selected above. You should present the following information in your descriptive statistics: range, average, standard deviation, the number of NAs, and the number of unique values. (5%)**
+
+    ```{r}
+    #type your code here
+    ```
+
+7.  **Plot one univariate graph for each of the variables/columns. (5%)**
+
+    ```{r}
+    #type your code here
+    ```
+
+8.  **Finally, plot a graph to visually test the hypothesis you propose. Based on the visual evidence, do you see any potential correlation between the two variables? (10%)**
+
+    ```{r}
+    #type your code here
+    ```
+
+## Part 2. Reviewing the findings of a graph by examining the raw data.
+
+This part of the challenge is based on a scenario. Suppose you are a data scientist who provides consulting services to the government. One day, your client asks you to investigate an article by the New York Times that reported on some research on people's confidence in the institutions of democracy. It had been published in an academic journal. The headline in the Times ran, ["How Stable Are Democracies? 'Warning Signs Are Flashing Red'" (Taub, 2016)](https://www.nytimes.com/2016/11/29/world/americas/western-liberal-democracy.html). The graph accompanying the article, as shown below, plots people's responses to a question in the World Value Survey (WVS) (V162-Importance of democracy). The graph certainly seemed to show an alarming decline. The graph was widely circulated on social media. It's an elegant small-multiple that, in addition to the point ranges it identifies, also shows an error range (labeled as such for people who might not know what it is), and the story told across the panels for each country is pretty consistent.
+
+![](https://socviz.co/assets/ch-01-democracy-nyt-version.png){fig-align="center" width="1000"}
+
+1.  **Please briefly describe the major findings of this graph. (5%)**
+
+2.  **Your client is concerned about the findings of this graph.** On the one hand, they are surprised and worried by the "crisis of democracy" presented in this graph**. On the other hand, they also doubt the argument of the NYT article and the validity of the findings of this graph.** Before deciding on making any policy to respond, they ask you to conduct some additional research with the original data.
+
+    \(1\) Read the provided WVS data. The dataset is large, so you must subset it before analyzing it. **Please keep only the following columns: respondents' country(V2), age(V236), and the question for plotting (V162).** You also need to filter only the observations in the six countries mentioned above: Sweden, Australia, Netherlands, United States, New Zealand, and Britain/United Kingdom. **(10%)**
+
+    Note: all the columns, including those that are measured categorically, are represented by numbers. You must check out the WVS5 codebook to identify what the numerical values mean (especially for V2-country, see p57 of the codebook).
+
+    ```{r}
+    #read the dataset
+    ```
+
+    \(2\) Conduct descriptive statistics to show these three columns' unique values, means, ranges, and numbers of NA. You can plot univariate graphs as we did in challenge#4 or apply the summary statistics function as in challenge#3. Just do either approach. **(10%）**
+
+    ```{r}
+    #type your code here
+    ```
+
+    \(3\) (Optional) Please replicate the graph of the NYT article.
+
+    ```{r}
+    #type your code here
+    ```
+
+    \(4\) Now, please plot a graph to show the relationship between the decades of birth (x-axis) and the average level of the response scores to the question "importance of democracy" (y-axis) for each of the six countries. You can use facet_grid or facet_wrap to combine multiple graphs into a matrix of panels. **(15%)**
+
+    ```{r}
+    #type your code here
+    ```
+
+3.  **Describe what you find from the graph you made above. Compared to the graph on NYT, what's in common, or what's different? Please type your answer below. (5%)**
+
+4.  **Your client wants to hear your conclusion. Do you agree with the argument presented by the graph and the NYT article? Should we really worry about the decline? This is an op-ed question. Please type your answer below. (5%)**
