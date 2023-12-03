@@ -30,6 +30,8 @@ library(readxl)
 library(haven) #for loading other datafiles (SAS, STATA, SPSS, etc.)
 library(stringr) # if you have not installed this package, please install it.
 library(ggplot2) # if you have not installed this package, please install it.
+library(lubridate)
+library(readr)
 knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
 ```
 
@@ -53,6 +55,14 @@ Dataset 2: The Covid-19 Reports in Massachusetts. The datasets are stored in an 
 
 ```{r}
 #type your code here
+ Covid19_maweek <- read_excel("_data/covid-19-dashboard-11-16-23.xlsx", sheet = "WkCaseDeath")
+View(Covid19_maweek)
+as_tibble(Covid19_maweek)
+names(Covid19_maweek)[5] ="AllDeaths"
+names(Covid19_maweek)[8] ="AllCases"
+names(Covid19_maweek)[2] ="WeekEnd"
+Covid19_maweek$WeekEnd <- ymd(Covid19_maweek$WeekEnd)
+str(Covid19_maweek)
 
 ```
 
@@ -62,6 +72,24 @@ Dataset 2: The Covid-19 Reports in Massachusetts. The datasets are stored in an 
 
     ```{r}
     #type your code here
+# 1. Structure of the data:
+#  Data has 195 observations and 9 variables   
+# tibble [195 × 9] (S3: tbl_df/tbl/data.frame)
+# $ Week Start Date : POSIXct[1:195], format: "2023-01-08" "2021-10-17" ...
+# $ WeekEnd         : Date[1:195], format: "2023-01-14" "2021-10-23" ...
+# $ Confirmed deaths: num [1:195] 132 79 153 85 654 74 417 67 53 66 ...
+# $ Probable deaths : num [1:195] 47 4 15 2 23 2 47 1 9 15 ...
+# $ AllDeaths       : num [1:195] 179 83 168 87 677 76 464 68 62 81 ...
+# $ Confirmed cases : num [1:195] 7075 8163 18177 9316 12145 ...
+# $ Probable cases  : num [1:195] 1645 699 1003 748 30 ...
+# $ AllCases        : num [1:195] 8720 8862 19180 10064 12175 ...
+# $ Last updated    : POSIXct[1:195], format: "2023-11-16" "2023-11-16" ...
+#2. The unit of observation is based on:
+#    Weekly counts of COVID 19 deaths and cases in Massachusetts from Feb2020 until
+#    Nov2023. There are three "counts" for deaths/cases - confirmed, probable, and
+#    all.
+    
+       
     ```
 
     \(2\) what is the unit of observation? **(2.5%)**
@@ -80,18 +108,111 @@ Dataset 2: The Covid-19 Reports in Massachusetts. The datasets are stored in an 
 
     ```{r}
     #type your code here
+  # 3. Research Question:
+# After several years, the COVID19 virus is still causing illness and death. With the advent of new vaccines and better treatments for those with the virus, have deaths from the disease reached a stable percentage in Massachusetts?
+# 
+  # 4. Hypothesis about relationship of two variables:
+# If we compare confirmed cases reported with confirmed deaths reported from COVID19 over the timeline since its beginning (February 2020) we should be able to examine a ratio between deaths and cases for each week to see if this ratio has stabilized.
+  # 5. Variables to be Measured:
+# The MA Dept of Public Health has tracked COVID19 since February of 2020. There are many detailed data sets that provide insight into the demographics of the commonwealth’s counties, cities, towns, racial makeup and age information. 
+# The weekly counts of cases and death will be used for this analysis. In this data set, cases and deaths have three possible values based on how they were categorized: 
+# COVID Cases: Confirmed, Probable, and Confirmed and Probable
+# COVID Deaths: Confirmed, Probable, and Confirmed and Probable
+# For the analysis I will be using only the confirmed counts, as their DPH definitions are very specific. A person with a positive molecular test for COVID19 is the definition of a confirmed case. A COVID19 confirmed death is a person who has COVID-19 or an equivalent term listed on the death certificate. The data provided by the DPH can produce reliable follow-on analysis as the counts and dates are very specific. I believe that using the confirmed case and death data is a valid choice as the definitions of each count are well defined.
+  
+    #6. Descriptive Statistics for 
+    
+    #   Confirmed Cases
+ # Range
+range_values <- range(Covid19_maweek$`Confirmed cases`)
+print(paste("Range:", range_values))
+# "Range: 1"      "Range: 162720"
+
+# Average (Mean)
+average_value <- mean(Covid19_maweek$`Confirmed cases`, na.rm = TRUE)
+print(paste("Average:", average_value))
+# "Average: 10662.7897435897"
+
+# Standard Deviation
+std_dev_value <- sd(Covid19_maweek$`Confirmed cases`, na.rm = TRUE)
+print(paste("Standard Deviation:", std_dev_value))
+# "Standard Deviation: 17876.9332027033"
+
+# Count of NA values
+na_count <- sum(is.na(Covid19_maweek$`Confirmed cases`))
+print(paste("Count of NA values:", na_count))
+#"Count of NA values: 0"
+
+# Count of Unique values
+unique_count <- length(unique(Covid19_maweek$`Confirmed cases`))
+print(paste("Count of Unique values:", unique_count))
+# "Count of Unique values: 194"
+
+    #   Confirmed Deaths
+
+# Range
+range_values <- range(Covid19_maweek$`Confirmed deaths`)
+print(paste("Range:", range_values))
+#"Range: 0"    "Range: 1210"
+
+# Average (Mean)
+average_value <- mean(Covid19_maweek$`Confirmed deaths`, na.rm = TRUE)
+print(paste("Average:", average_value))
+"Average: 118.041025641026"
+
+# Standard Deviation
+std_dev_value <- sd(Covid19_maweek$`Confirmed deaths`, na.rm = TRUE)
+print(paste("Standard Deviation:", std_dev_value))
+#"Standard Deviation: 184.086007349922"
+
+# Count of NA values
+na_count <- sum(is.na(Covid19_maweek$`Confirmed deaths`))
+print(paste("Count of NA values:", na_count))
+# "Count of NA values: 0"
+
+# Count of Unique values
+unique_count <- length(unique(Covid19_maweek$`Confirmed deaths`))
+print(paste("Count of Unique values:", unique_count))    
+#"Count of Unique values: 118"
+
     ```
 
 7.  **Plot one univariate graph for each of the variables/columns. (5%)**
 
     ```{r}
     #type your code here
+ 
+ggplot(Covid19_maweek, aes(x = `WeekEnd`, y = `Confirmed cases`)) +
+  geom_bar(stat = "identity", position = "dodge", color = "black", alpha = 0.7) +
+  labs(title = "Histogram of Confirmed Cases by WeekEnd", x = "WeekEnd", y = "Confirmed Cases") +
+  theme_minimal()    
+       
+ggplot(Covid19_maweek, aes(x = `WeekEnd`, y = `Confirmed deaths`)) +
+  geom_bar(stat = "identity", position = "dodge", color = "black", alpha = 0.7) +
+  labs(title = "Histogram of Confirmed Deaths by WeekEnd", x = "WeekEnd", y = "Confirmed Deaths") +
+  theme_minimal()
+    
+    
     ```
 
 8.  **Finally, plot a graph to visually test the hypothesis you propose. Based on the visual evidence, do you see any potential correlation between the two variables? (10%)**
 
     ```{r}
     #type your code here
+    
+    # create new variable for pct of confirmed deaths/confirmed cases
+    
+   Covid19_maweek$Pct_Deaths <- Covid19_maweek$`Confirmed deaths` / Covid19_maweek$`Confirmed cases` 
+    
+    ggplot(Covid19_maweek, aes(x = WeekEnd, y = Pct_Deaths)) +
+  geom_smooth(color = "blue") +
+  labs(title = "Line Plot of % Covid Deaths/Cases over Time", x = "Week Ending", y = "% Deaths/Cases") +
+  theme_minimal()
+    
+  # Using geom_line it was not immediately clear that a correlation exists; I was hoping for a smoother "flat" line that would indicate steady state. I then used the geom_smooth which helped understand the correlation better. 
+  # It does appear that there was a relatively steady rate in 21-22, it flattens out again 22-23, but at a higher rate. 
+  # I would have expected that more vaccines and treatments would have kept recent rates lower.
+    
     ```
 
 ## Part 2. Reviewing the findings of a graph by examining the raw data.
@@ -110,12 +231,92 @@ This part of the challenge is based on a scenario. Suppose you are a data scient
 
     ```{r}
     #read the dataset
+install.packages("dplyr")
+library(dplyr)
+    
+    
+    WVS_file <- read_rds('_data/WVS5.rds')
+    WVS_subset <- WVS_file[, c("V2", "V236", "V162")]
+    values_to_keep <- c(36, 752, 554, 840, 528, 826)
+    WVS_filter <- WVS_subset[WVS_subset$V2 %in% values_to_keep, ]
+    
+    
+    
+    
+    
     ```
 
     \(2\) Conduct descriptive statistics to show these three columns' unique values, means, ranges, and numbers of NA. You can plot univariate graphs as we did in challenge#4 or apply the summary statistics function as in challenge#3. Just do either approach. **(10%）**
 
     ```{r}
     #type your code here
+  
+    # Statistics for V2 - Country/Region  
+    
+  # Range
+range_values <- range(WVS_filter$V2)
+print(paste("Range:", range_values))
+#"Range: 36"    "Range: 840"
+
+# Average (Mean)
+average_value <- mean(WVS_filter$V2, na.rm = TRUE)
+print(paste("Average:", average_value))
+"Average: 565.250669842215"
+
+# Count of NA values
+na_count <- sum(is.na(WVS_filter$V2))
+print(paste("Count of NA values:", na_count))
+# "Count of NA values: 0"
+
+# Count of Unique values
+unique_count <- length(unique(WVS_filter$V2))
+print(paste("Count of Unique values:", unique_count))    
+#"Count of Unique values: 6"  
+
+   # Statistics for V236 - Year of Birth  
+    
+  # Range
+range_values <- range(WVS_filter$V236)
+print(paste("Range:", range_values))
+#"Range: -2"    "Range: 1991"
+
+# Average (Mean)
+average_value <- mean(WVS_filter$V236, na.rm = TRUE)
+print(paste("Average:", average_value))
+"Average: 1946.52560285799"
+
+# Count of NA values
+na_count <- sum(is.na(WVS_filter$V236))
+print(paste("Count of NA values:", na_count))
+# "Count of NA values: 0"
+
+# Count of Unique values
+unique_count <- length(unique(WVS_filter$V236))
+print(paste("Count of Unique values:", unique_count))    
+#"Count of Unique values: 80"
+
+   # Statistics for V162 - Importance of Democracy  
+    
+  # Range
+range_values <- range(WVS_filter$V162)
+print(paste("Range:", range_values))
+#"Range: -5"    "Range: 10"
+
+# Average (Mean)
+average_value <- mean(WVS_filter$V162, na.rm = TRUE)
+print(paste("Average:", average_value))
+"Average: 6.87139029473057"
+
+# Count of NA values
+na_count <- sum(is.na(WVS_filter$V162))
+print(paste("Count of NA values:", na_count))
+# "Count of NA values: 0"
+
+# Count of Unique values
+unique_count <- length(unique(WVS_filter$V162))
+print(paste("Count of Unique values:", unique_count))    
+#"Count of Unique values: 14"
+    
     ```
 
     \(3\) (Optional) Please replicate the graph of the NYT article.
@@ -128,6 +329,19 @@ This part of the challenge is based on a scenario. Suppose you are a data scient
 
     ```{r}
     #type your code here
+  values_to_keep <- c(840)
+
+# Create WVS_filtered dataset
+  WVS_filterUSA <- WVS_filter[WVS_filter$V2 %in% values_to_keep, ]
+  
+  ggplot(WVS_filterUSA, aes(x = V236, y = V162)) +
+  geom_smooth(method = "loess", se = FALSE, color = "blue") +
+  labs(title = "Year of Birth vs Importance of Democracy in USA",
+       x = "Year of Birth",
+       y = "Importance of Democracy") +
+  theme_minimal()
+    
+    
     ```
 
 3.  **Describe what you find from the graph you made above. Compared to the graph on NYT, what's in common, or what's different? Please type your answer below. (5%)**
