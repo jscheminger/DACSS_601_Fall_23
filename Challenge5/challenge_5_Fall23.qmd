@@ -1,0 +1,220 @@
+---
+title: "Challenge_5: Visualizing Time and Space"
+author: "Jeff Scheminger"
+description: "A Holloween Special"
+date: "11/5/2023"
+format:
+  html:
+    df-print: paged
+    css: "styles.css"
+    embed-resources: true
+    self-contained-math: true
+categories:
+  - weekly_challenges
+  - challenge_5
+---
+
+**Make sure you change the author's name in the above YAML header.**
+
+## Setup
+
+If you have not installed the following packages, please install them before loading them.
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(readr)
+library(readxl)
+library(haven) #for loading other datafiles (SAS, STATA, SPSS, etc.)
+
+#for plotting time
+library(ggplot2) # if you have not installed this package, please install it.
+library(lubridate)
+
+
+#for plotting space
+library(sp)
+library(sf)
+library(maps)
+library(usmap)
+library(rnaturalearth)
+library(rnaturalearthdata)
+
+knitr::opts_chunk$set(echo = TRUE, warning=TRUE, message=FALSE)
+```
+
+## Challenge Overview
+
+![Halloween2023](https://im.indiatimes.in/content/2023/Aug/halloween-2023-date1_64d222bb35bee.jpg?w=1100&h=535&cc=1){fig-align="center" width="431"}
+
+In this challenge, we will practice the visualization skills learned in the class with two datasets to capture the temporal and spatial patterns of supernatural phenomena.
+
+There will be coding components and writing components. Please read the instructions for each part and complete your challenges.
+
+## Datasets
+
+-   [Part 1. The UFO Sightings Data (50%)](#part-1.-the-ufo-sightings-data-50)
+-   [Part 2. The Haunted Places Data (50%)](#part-2.-the-haunted-places-data-50)
+
+Find the `_data` folder, then read the datasets using the correct R command.
+
+## Part 1. The UFO Sightings Data (50%) {#part-1.-the-ufo-sightings-data-50}
+
+This data contains over 80,000 reports of UFO sightings over the last century in six major countries (and other places). You can learn more about this data by checking: <https://www.kaggle.com/datasets/NUFORC/ufo-sightings>.
+
+1.  **Read and Describe the Data (10%)**
+
+    What is the dimension of the data? What do the columns mean? What is the unit of observation?
+
+```{r}
+#type of your code/command here.
+
+UFO_data <- read_csv("_data/complete.csv")
+View(UFO_data)
+str(UFO_data)
+
+```
+
+2.  Please plot a temporal/time-series graph to present the following patterns. **You may need to subset or mutate the data for graphing.**
+
+    \(1\) the total number of UFO sighting reports over the years (date_break = year). **(15%)**
+
+    ```{r}
+   
+ #type of your code/command here.
+    
+colnames(UFO_data)[colnames(UFO_data) == "datetime"] <- "DateSeen"
+as_tibble(UFO_data)
+# Extract the year
+UFO_data$year <- year(DateSeen)
+UFO_data$month <- month(DateSeen)
+
+
+UFO_data1 <- UFO_data |>
+  filter_all(all_vars(!is.na(.))) |>
+  group_by(year)  |>
+  summarise(count = n())
+
+Plot_UFO <- ggplot(UFO_data1 , aes(x = year, y = count)) +
+   geom_line(color = "blue") +
+   labs(title = "UFO Documented Sitings by Year", x = "Year", y = "Sightings")
+
+print(Plot_UFO)
+
+    ```
+
+    \(2\) the total number of UFO sighting reports by months between 2010-01-01 and 2014-01-01. **(15%)**
+
+    ```{r}
+    #type of your code/command here.
+
+      
+UFO_data2 <- UFO_data |>
+  filter(year >= 2011 & year <= 2013)
+    
+UFO_Mo_summary <- UFO_data2 |>
+  group_by( year, month) |>
+  summarise(monthly_counts = n()) |>
+  ungroup()
+
+UFO_Mo_summary <- UFO_Mo_summary |>
+  mutate(month_year = paste(month, year, sep = "/"))
+
+UFO_Mo_summary$month_year <- format(my(UFO_Mo_summary$month_year), "%Y-%m")
+
+# Display the resulting data
+print(UFO_Mo_summary)
+    
+ggplot(UFO_Mo_summary, aes(x = month_year, y = monthly_counts)) +
+  geom_col(fill = "blue", color = "black") +
+  labs(title = "2011 - 2013 Monthly UFO Sightings", x = "Date", y = "Sightings") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))  # Rotate x-axis labels
+
+    ```
+
+3.  Please write a paragraph describing the patterns you find on the two graphs above. **(10%)**
+
+4.  **(Optional)** Use `gganimte` and `gifsky` packages to plot gifs of the above time-series plots. You can refer to codes and commands in the Week#8 demo file.
+
+    ```{r}
+    #type of your code/command here.
+
+  #3. Looking at UFO numbers by year, we see very few sightings up until the mid 1960's. After that, there is very notable uptick into the 2000's, which seems to continue until present day. The monthly data from 2011-2013 is somewhat consistent, with an unusual pattern in April months across the three years.
+    
+    ```
+
+5.  **(Optional)** Suppose we are interested in describing the country variations in types and numbers of UFO sighting reports. How can we use bar plots to visualize the difference across countries (using the *country* column, you can recode the empty cells with "others")? **Note that you may need to do the data transformation or mutation needed to help graphing.**
+
+    ```{r}
+    #type of your code/command here.
+    ```
+
+## Part 2. The Haunted Places Data (50%) {#part-2.-the-haunted-places-data-50}
+
+This data contains the reports of haunted places in the United States. The dataset was compiled by Tim Renner, using The Shadowlands Haunted Places Index, and shared on data.world. You can learn more about this data by checking: <https://www.kaggle.com/datasets/sujaykapadnis/haunted-places>
+
+1.  **Read and Describe the Data (10%) (Note: you don't need to remove the empty rows after the first row; `read_csv()` should automatically remove them).**
+
+    What is the dimension of the data? What do the columns mean? What is the unit of observation?
+
+    ```{r}
+    #type of your code/command here.
+    
+    Haunted_places <- read_csv("_data/haunted_places.csv")
+    str(Haunted_places)
+    
+    # Description of the Haunted Places dataset: Ten variables and 10,992 rows consisting of state/county/city, specific longitude and latitude, a description of the incident and datetime information. The unit of observation is a reported haunting at a specific location. 
+    
+    
+    ```
+
+2.  Plot a USA map with states boundaries. There are multiple ways of plotting this map. **(15%)**
+
+    You can use the `geom_polygon()` (which requires a data of spatial coordinates for plotting a polygon), or you can use `geom_sf()` (which requires a shapefile of the US). Please refer to the examples in the Week#8 demo file.
+
+    ```{r}
+    #type of your code/command here.
+us_states <- map_data("state")
+
+# Plot the US map with AK and HI included
+ggplot() +
+  geom_polygon(data = us_states, aes(x = long, y = lat, group = group), color = "black") +
+  coord_fixed() +  # Maintain aspect ratio
+  labs(title = "Geometric Polygon Map of US States including AK & HI")
+```
+
+3.  Plot the haunted places using the *city_longtitude* and *city_latitude* with `geom_point()` on the USA map generated above. **(15%)**
+
+    ```{r}
+  
+    #type of your code/command here.
+    Haunted_places <- Haunted_places |>
+  filter(state_abbrev != "HI" & state_abbrev != "AK")
+    
+    ggplot() +
+    geom_polygon(data = us_states, aes(x = long, y = lat, group = group), color = "black") +
+  coord_fixed() +
+   geom_point(data = Haunted_places, aes(x = city_longitude, y = city_latitude), color = "red", size = 1) +
+  labs(title = "Haunted Places in the USA")
+    
+    ```
+
+4.  Please write a paragraph describing the pattern of the haunted spaces you find on the map above. **(10%)**
+
+    ```{r}
+    #type of your code/command here.
+    
+  #The pattern of haunted spaces in the US have several plausible explanations. Higher density of the haunting incidents appears to be correlated with more dense areas. A summary of the counts by state seems to infer that the most populous states have the most hauntings. The additional thought has to do with age of cities - the older the city the more likely it is that more deaths would propagate more hauntings.   
+    
+  Haunted_places_summary <- Haunted_places |>
+  filter(!is.na(state)) |>  
+  group_by(state) |>
+  summarize(Haunted_Space_Count = n())
+    
+
+  
+  
+    ```

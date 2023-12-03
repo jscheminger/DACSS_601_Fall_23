@@ -1,0 +1,383 @@
+---
+title: "Challenge_2: Data Transformation(2), Pivot and Date-Time Data"
+author: "Jeff Scheminger"
+description: ""
+date: "09/26/2023"
+format:
+  html:
+    df-print: paged
+    css: "styles.css"
+    embed-resources: true
+    self-contained-math: true
+categories:
+  - weekly_challenges
+  - challenge_2
+---
+
+**Make sure you change the author's name in the above YAML header.**
+
+## Setup
+
+If you have not installed the following packages, please install them before loading them.
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(readxl)
+library(haven) #for loading other datafiles (SAS, STATA, SPSS, etc.)
+library(stringr) # if you have not installed this package, please install it.
+library(lubridate)
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+Building on the lectures in week#3 and week#4, we will continually practice the skills of different transformation functions with Challenge_2. In addition, we will explore the data more by conducting practices with pivoting data and dealing with date-time data.
+
+There will be coding components and writing components. Please read the instructions for each part and complete your challenges.
+
+## Datasets
+
+There are four datasets provided in this challenge. Please download the following dataset files from Canvas or Google Classroom and save them to a folder within your project working directory (i.e.: "yourworkingdiectory_data"). If you don't have a folder to store the datasets, please create one.
+
+-   ESS_5.dta (Part 1) ⭐
+-   p5v2018.sav (Part 1)⭐
+-   austrlian_data.csv (Part 3)⭐
+-   FedFundsRate (Part 4)⭐
+
+Find the `_data` folder, then use the correct R command to read the datasets.
+
+## Part 1(Required). Depending on the data you chose in Challenge#1 (ESS_5 or Polity V), please use that data to complete the following tasks
+
+## **If you are using the ESS_5 Data:**
+
+1.  **Read the dataset and keep the first 39 columns.**
+
+```{r}
+#Type your code here
+ESS_data <- read_dta( '_data/ESS_5.dta')
+    dim(ESS_data)
+    head(ESS_data)
+    # str(ESS_data)
+  
+    
+ESS_mod1 <- ESS_data %>%
+    select(1:39)
+
+    dim(ESS_mod1)
+    head(ESS_mod1)    
+```
+
+2.  **Conduct the following transformation for the data by using mutate() and other related functions :**
+
+    \(1\) Create a new column named "YearOfBirth" using the information in the "age" column.
+
+    \(2\) Create a new column named "adult" using the information in the "age" column.
+
+    \(3\) Recode the "commonlaw" column: if the value is 0, recode it as "non-common-law"; if the value is 1, recode it as "common-law".
+
+    \(4\) Recode the "vote" column: if the value is 3, recode it as 1; if the value is smaller than 3, recode it as 0. Make sure to exclude the NAs.
+
+    \(5\) Move the column "YearOfBirth", "adult," "commonlaw" and "vote" right after the "essround" column (the 2nd column in order).
+
+    \(6\) Answer the question: What is the data type of the "commonlaw" column before and after recoding? And what is the data type of the "vote" column before and after recoding? - Commonlaw before recoding is "num" type; Vote before recoding is "dbl+lbl"
+    After recoding commonlaw is "character", vote is "double"
+
+```{r}
+#Type your code here
+
+# add column and calculate YearOfBirth from age
+ESS_mod1$YearOfBirth <- (2023-ESS_mod1$age)
+
+# ESS_mod1$Adult <- ("minor") - this was superseded by next block with mutat and case_when
+  
+ESS_mod1 <- ESS_mod1 %>%
+  mutate(Adult = case_when(
+          age > 17 ~ "adult",
+          age <= 17 ~ "minor"))
+
+#use recode to change 0/1 to description
+# ESS_mod1$commonlaw <- as.numeric(ESS_mod1$commonlaw)
+
+ESS_mod1 <- ESS_mod1 %>%
+  mutate(commonlaw = case_when(
+          commonlaw == 0 ~ "non-common-law",
+          commonlaw == 1 ~ "common-law"))
+
+ESS_mod1 <- ESS_mod1 %>%
+  mutate(vote = case_when (
+                    vote == 3 ~ 1,
+                    vote == 2 ~ 0,
+                    vote ==1 ~ 0,
+                    ))
+
+ESS_mod2 <- ESS_mod1 %>%
+  relocate(vote, .after = essround)
+
+ESS_mod2 <- ESS_mod2 %>%
+  relocate(commonlaw, .after = essround)
+
+ESS_mod2 <- ESS_mod2 %>%
+  relocate(Adult, .after = essround)
+
+ESS_mod2 <- ESS_mod2 %>%
+  relocate(YearOfBirth, .after = essround)
+
+typeof(ESS_mod1$commonlaw)
+typeof(ESS_mod1$vote)
+
+```
+
+## **If you are using the Polity V Data:**
+
+1.  **Read the dataset and keep the first 11 columns.**
+
+```{r}
+#Type your code here
+```
+
+2.  **Conduct the following transformation for the data by using mutate() and other related functions :**
+
+    \(1\) Create a new column named "North America" using the information in the "country" column. Note: "United States," "Mexico," or "Canada" are the countries in North America. In the new "North America" column, if a country is one of the above three countries, it should be coded as 1, otherwise as 0.
+
+    \(2\) Recode the "democ" column: if the value is 10, recode it as "Well-Functioning Democracy"; if the value is greater than 0 and smaller than 10, recode it as "Either-Autocracy-or-Democracy"; if the value is 0, recode it as "Non-democracy"; if the value is one of the following negative integers (-88, -77, and -66), recode it as "Special-Cases."
+
+    \(3\) Move the column "North America" and "democ" right before the "year" column (the 6th column in order).
+
+    \(4\) Answer the question: What is the data type of the "North America" column? What is the data type of the "democ" column before and after recoding?
+
+```{r}
+#Type your code here
+```
+
+## Part 2. Generate your own Data
+
+1.  **Generate an untidy data that includes 10 rows and 10 columns. In this dataset, column names are not names of variables but a value of a variable.**
+
+    \*Note: do not ask ChatGPT to generate a dataframe for you. I have already checked the possible questions and answers generated by AI.
+
+```{r}
+#Type your code here
+
+Untidy_10x10 <- data.frame(
+  oct2 = c(91.56580, 93.77047, 29.32781, 83.21431, 64.53281, 52.39050, 73.92224, 14.33199, 66.04224, 70.80141),
+  oct5 = c(12.595928, 48.918944, 65.469496,  7.771271, 37.164483, 23.166467, 29.896279, 57.755090, 83.825413,72.879156),
+  nov3 = c(58.08376, 23.08421, 33.85776, 71.36173, 82.12545, 42.94834, 96.39091, 97.83491, 84.21167, 99.66451),
+  nov23 = c(19.30334, 70.53503, 57.75931, 17.63714, 94.44009, 94.40402, 13.78674, 83.51143, 47.33383, 55.44839),
+  sep5 = c(31.12341, 47.99915, 99.35905, 52.54473, 84.47987, 72.60814, 61.90164, 74.17796, 42.30676, 37.88987),
+  jan9 = c(10.77950, 49.33495, 37.03964, 42.64129, 30.79547, 15.61588, 89.95892, 23.13209, 96.63037, 14.96564),
+  feb2 = c(44.521605, 56.365307, 78.775860,  8.314761, 60.845726,  1.733544, 67.666471, 63.530462, 59.641871, 74.819247),
+  mar30 = c(99.00372, 83.13957, 59.00280, 42.28757, 66.54759, 38.55091, 43.00229, 84.40876, 38.26778, 91.24148),
+  may5 = c(58.88647, 12.26439, 68.74221, 99.25837, 53.96436, 96.69479, 67.47133, 30.16319, 36.47794, 18.35616),
+  jun2 = c(27.285358, 37.840266, 57.712483, 90.912571, 20.966511, 89.940579, 94.522852, 66.418981, 63.282290,7.116841)
+)
+
+dim(Untidy_10x10)
+head(Untidy_10x10)
+str(Untidy_10x10)
+
+
+
+```
+
+2.  **Use the correct pivot command to convert the data to tidy data.**
+
+```{r}
+#Type your code here
+
+Tidy_10x10 <- pivot_longer(Untidy_10x10, 
+                           cols = everything(),  
+                           names_to = "Date",      
+                           values_to = "Value"     
+)
+
+
+```
+
+3.  **Generate an untidy data that includes 10 rows and 10 columns. In this dataset, an observation is scattered across multiple rows.**
+
+```{r}
+#Type your code here
+YR_info <- data.frame(
+  entry1 = c(1987, "Jan", 8, NA, NA, 20, NA, NA, 20, 56),
+  entry2 = c(1987, "Jan", NA, 15, NA, 20, NA, NA, 33, NA),
+  entry3 = c(1987, "Jun", 8, NA, NA, 20, NA, NA, 20, 75),
+  entry4 = c(1987, "Jun", NA, 15, NA, 20, NA, NA, 23, NA),
+  entry5 = c(1987, "Jun", NA, NA, 22, NA, 20, NA, 8, NA),
+  entry6 = c(1988, "Jan", 5, NA, NA, 20, NA, NA, 20, 15),
+  entry7 = c(1988, "Jan", NA, NA, NA, NA, NA, NA, NA, 32),
+  entry8 = c(1988, "Jan", 4, NA, NA, 20, NA, NA, NA, 78),
+  entry9 = c(1988, "Jun", NA, 18, NA, 20, NA, 20, 14, NA),
+  entry10 = c(1988, "Jun", NA, NA, 30, NA, 20, NA, 42, NA)
+)
+
+print (YR_info)
+
+
+
+
+```
+
+3.  **Use the correct pivot command to convert the data to tidy data.**
+
+```{r}
+#Type your code here
+
+YR_info_tibble <- as_tibble(YR_info)
+
+YR_info_tibble <- YR_info_tibble %>%
+  rownames_to_column(var = "RowID")
+
+YR_info_long <- YR_info_tibble %>%
+  pivot_longer(cols = -c(RowID, entry1), names_to = "Month", values_to = "Value")
+
+YR_info_long <- YR_info_long %>%
+  filter(!is.na(Value))
+
+colnames(YR_info_long) <- c("RowID", "Year", "Month", "Value")
+
+
+```
+
+## Part 3. The Australian Data
+
+This is another tabular data source published by the [Australian Bureau of Statistics](https://www.abs.gov.au/) that requires a decent amount of cleaning. In 2017, Australia conducted a postal survey to gauge citizens\' opinions towards same sex marriage: \"Should the law be changed to allow same-sex couples to marry?\" All Australian citizens are required to vote in elections, so citizens could respond in one of four ways: vote yes, vote no, vote in an unclear way, or fail to vote. (See the \"Explanatory Notes\" sheet for more details.)
+
+I have already cleaned up the data for you and you can directly import it. We will come back to clean and process the original "messy" data after we learn some string functions in the later weeks.
+
+1.  **Read the dataset "australian_data.csv":**
+
+```{r}
+#Type your code here
+AUS_data <- read_csv( '_data/australian_data.csv')
+dim(AUS_data)
+head(AUS_data) 
+str(AUS_data)
+    
+    
+```
+
+2.  **Data Description: Please use the necessary commands and codes and briefly describe this data with a short writing paragraph answering the following questions.**
+
+    ```{r}
+    #Type your code here
+    dim(AUS_data)
+    str(AUS_data)
+    # 1 What is the dimension of the data (# of rows and columns)? - 7 columns; 150 rows
+    
+  # 2 What do the rows and columns mean in this data? - Rows hold data with Name of district, number of Yes Votes, number of No Votes, number of Illegible Votes, number of No Response, and name of Division. Columns are District (names), Yes vote, No vote, Illegible vote, No Response vote, and Division.
+
+  # 3 What is the unit of observation? In other words, what does each case mean in this data? - Unit of observation is the voting properties from individual districts, including district name, Yes vote count, No vote count, Illegible count, No Response count, and Division that the district belongs to. 
+
+  # 4 According to the lecture, is this a "tidy" data? Why? It is tidy; column headings have variables and each observation holds unique data.
+
+  # 5 If this is not a tidy data, please use the necessary commands to make it "tidy".
+    
+ # 6 Suppose that we wanted to add additional division-level characteristics (new columns/variables) to the data and use these new characteristics to build a statistical model (such as an ordinal logistic regression) to predict people's voting response. Is the current data shape still good? If not, how should we change it? - I don't think the current shape is good. The data in each unit is an aggregated value with counts of votes. We would likely need the individual voter choices in conjunction with additional columns to have validity.   
+    
+    ```
+
+  # 1 What is the dimension of the data (# of rows and columns)?
+
+  # 2 What do the rows and columns mean in this data?
+
+  # 3 What is the unit of observation? In other words, what does each case mean in this data?
+
+  # 4 According to the lecture, is this a "tidy" data? Why?
+
+  # 5 If this is not a tidy data, please use the necessary commands to make it "tidy".
+  
+  # 6 Suppose that we wanted to add additional division-level characteristics (new columns/variables) to the data and use these new characteristics to build a statistical model (such as an ordinal logistic regression) to predict people's voting response. Is the current data shape still good? If not, how should we change it?
+
+## Part 4. The Marco-economic Data
+
+This data set runs from July 1954 to March 2017, and includes daily macroeconomic indicators related to the *effective federal funds rate* - or [the interest rate at which banks lend money to each other](https://en.wikipedia.org/wiki/Federal_funds_rate) in order to meet mandated reserve requirements.
+
+1.  **Read the dataset "australian_data.csv":**
+
+```{r}
+#Type your code here
+
+FED_data <- read_csv( '_data/FedFundsRate.csv')
+spec(FED_data)
+
+    
+```
+
+2.  **Data Description: Please use the necessary commands and codes and briefly describe this data with a short writing paragraph answering the following questions.**
+
+    ```{r}
+    #Type your code here
+dim(FED_data)
+head(FED_data) 
+str(FED_data)    
+ 
+  #2  **Data Description: Please use the necessary commands and codes and briefly describe this data with a short writing paragraph answering the following questions.**  A data set with 10 variables and 904 rows. All data are "num" type. Column variables include Y-M-D, and various federal funds rates and targets. The columns also include GDP, unemployment rate, and inflation rate. 
+    ```
+
+    \(1\) What is the dimension of the data (# of rows and columns)? 10 x 904
+
+    \(2\) What do the rows and columns mean in this data?   Column variables include Y-M-D, and various federal funds rates and targets. The columns also include GDP, unemployment rate, and inflation rate. Rows contain data for the 1st day of each month for years from 1954 to 2017
+
+    \(3\) What is the unit of observation? In other words, what does each case mean in this data?  Units of observation contain data for the 1st day of each month for years from 1954 to 2017, with many values not reported in the unit.
+
+3.  **Generating a date column:**
+
+    Notice that the year, month, and day are three different columns. We will first have to use a string function called "str_c()" from the "stringr" library to combine these three columns into one "date" column. Please revise the following commands
+
+    ```{r}
+    FED_rates<-FED_data %>%
+      mutate(date = str_c(Year, Month, Day, sep="-"))
+    str(FED_rates)
+
+
+    ```
+
+4.  **What is the data type of the new "date" column?**
+
+5.  **Transform the "date" column to a \<date\> data.**
+
+    ```{r}
+    #Type your code here
+    
+    #4 data type for date is chr
+    FED_rates$date <- as.Date(FED_rates$date)
+    str(FED_rates)
+    ```
+
+6.  **(TBD) Conduct some statistics with the date column (Sep 28).**
+7.  **Conduct following statistics:**
+
+    ```{r}
+    #Type your code here
+    subset_FED_data <- FED_rates[c("date", "Unemployment Rate")]
+
+    max_unemployment <- max(subset_FED_data$"Unemployment Rate", na.rm = TRUE)
+    
+    min_unemployment <- min(subset_FED_data$"Unemployment Rate", na.rm = TRUE)
+
+date_max_unemployment <- subset_FED_data$date[which(subset_FED_data$"Unemployment Rate" == max_unemployment)]
+
+date_min_unemployment <- subset_FED_data$date[which(subset_FED_data$"Unemployment Rate" == min_unemployment)]
+   
+ print (date_max_unemployment)  
+ print (date_min_unemployment) 
+    
+    ```
+
+    \(1\) On which *date* is the highest unemployment rate? and the lowest?  - two dates had the highest unemployment rate at 10.8%. Nov 1 and Dec 1 of 1982.
+
+    \(2\) (Optional) Which *decade* has the highest average unemployment rate?
+
+    Here is a template for you to create a decade column to allow you to group the data by decade. You can use it for the optional question in Challenge#1:
+
+    ```{r}
+    #fed_rates <- fed_rates |>
+    #  mutate(Decade = cut(Year, breaks = seq(1954, 2017, by = 10), labels = format(seq(1954, 2017, by = 10), format = "%Y")))
+
+
+    ##Note: the cut() a baseR function that we don't generally use. Basically, it allows us divides the range of Year into intervals and codes the values in Year according to which interval (1954 and 2017) they fall; the break argument specifies how we segmate the sequence of Year (by a decade)
+    ```

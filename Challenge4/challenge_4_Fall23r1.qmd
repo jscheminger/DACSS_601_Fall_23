@@ -1,0 +1,472 @@
+---
+title: "Challenge_4: Intro to Visulization: Univariate and Multivariate Graphs"
+author: "Jeff Scheminger"
+description: ""
+date: "10/29/2023"
+format:
+  html:
+    df-print: paged
+    css: "styles.css"
+    embed-resources: true
+    self-contained-math: true
+categories:
+  - weekly_challenges
+  - challenge_4
+---
+
+**Make sure you change the author's name in the above YAML header.**
+
+## Setup
+
+If you have not installed the following packages, please install them before loading them.
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+
+library(tidyverse)
+library(lubridate)
+library(readxl)
+library(haven) #for loading other datafiles (SAS, STATA, SPSS, etc.)
+library(stringr) # if you have not installed this package, please install it.
+library(ggplot2) # if you have not installed this package, please install it.
+library(dplyr)
+library(ggthemes)
+library(scales)
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Challenge Overview
+
+In this challenge, we will practice with the data we worked on in the previous challenges and the data you choose to do some simple data visualizations using the `ggplot2` package.
+
+There will be coding components and writing components. Please read the instructions for each part and complete your challenges.
+
+## Datasets
+
+-   Part 1 the ESS_Polity Data (created in Challenge#3) ⭐⭐
+-   Part 2: the Australia Data⭐⭐
+-   Part 3: see [Part 3. Practice plotting with a dataset of your choice (25% of the total grade)]. For online platforms of free data, see [Appendix: sources for data to be used in Part 3].
+
+Find the `_data` folder, then read the datasets using the correct R command.
+
+## Part 1. Univariate and Multivariate Graphs (45% of the total grade)
+
+We have been working with these two data in the previous three challenges. Suppose we have a research project that studies European citizens' social behaviors and public opinions, and we are interested in how the countries that respondents live in influence their behavior and opinion. In this challenge, let's work with the combined dataset *ESS_Polity* and create some visualizations.
+
+1.  **Read the combined data you created last time. (2.5%)**
+
+```{r}
+#type of your code/command here.
+
+ESS_Polity <- read_csv("_data/ESS_Polity1.csv")
+str(ESS_Polity)
+
+```
+
+2.  **Suppose we are interested in the central tendencies and distributions of the following variables. At the individual level:** *age, male, edu, income_10,* and *vote*. **At the country level**: *democ*.
+
+    \(1\) Recode the "vote" column: if the value is 1, recode it as 1; if the value is 2, recode it as 0; if the value is 3, recode it as NA. **Make sure to include a sanity check for the recoded data. (2.5%)**
+
+    ```{r}
+    #type of your code/command here.
+    
+    # check counts of existing values 
+   Vote_check <- ESS_Polity %>%
+    group_by(vote) %>%
+    summarize(count = n()) 
+# result is 1 = 36804; 2 = 11432; 3 = 3688; NA = 756
+
+# use mutate to recode values 
+    ESS_Polity2 <- ESS_Polity %>% 
+      mutate(vote = recode(vote, `1` = 1, `2` = 0, `3` = NA_real_))
+
+    # second check on recoded values
+    Vote_check2 <- ESS_Polity2 %>%
+    group_by(vote) %>%
+    summarize(count = n())  
+  # result is 0 = 11432; 1 = 36804; NA = 4444  
+
+# group by country to get democ numbers
+    
+ESS_bycountry <- ESS_Polity2 %>%
+  group_by(country) %>%
+  slice(1) 
+    
+    ```
+
+    \(2\) For each of the five variables (*age, edu, income_10,* *vote,* and *democ)*, please choose an appropriate type of univariate graph to plot the central tendencies and distribution of the variables. Explain why you choose this type of graph to present a particular variable (for example: "For example, I use a histogram to plot *age* because it is a continuous numeric variable"). **(25%)**
+
+    **(Note: You should use at least two types of univariate graphs covered in the lecture.)**
+
+    ```{r}
+    #type of your code/command here.
+    
+    # histogram for the "age" variable 
+# used because of numeric variables and is simple to interpret
+ggplot(ESS_Polity2, aes(x = age)) +
+  geom_histogram(binwidth = 5, fill = "blue", color = "black") +
+  labs(
+    title = "Histogram of Age",
+    x = "Age",
+    y = "Frequency"
+  )
+    
+  # bar plot for the "edu" variable
+  # Bar plot matches up with numeric variables that represent education levels
+    
+ggplot(ESS_Polity2, aes(x = edu)) +
+  geom_bar(fill = "green", color = "black") +
+  labs(
+    title = "Bar Plot of Education",
+    x = "Education Level",
+    y = "Frequency"
+  )
+
+# density chart for "democ" variable
+#remove null values for the chart
+# chose Density chart as democ variable is numeric 
+# and has outliers that are important to capture
+
+ggplot(ESS_bycountry, aes(x = democ)) +
+  geom_density(fill = "yellow", color = "black") +
+  labs(
+    x = "Democracy",
+    y = "Frequency",
+    title = "Country"
+  ) + scale_x_continuous(limits = c(-100, 25))
+
+ggplot(ESS_Polity2, aes(x = income_10)) +
+  geom_bar(fill = "orange", color = "black") +
+  labs(
+    title = "Bar Plot of Income Brackets across ESS",
+    x = "Annual Income  = n x 10,000 euro",
+    y = "Frequency"
+  )
+
+#  chart for "vote" variable
+#  Used geom col to represent 0/1 number values for F/M; easy to interpret 
+
+    ggplot(data = ESS_Polity2) + (mapping = aes(x = male , y = vote, fill=male)) +
+  geom_col() + 
+  labs(
+    title = "ESS Chart of Female vs male Voters",
+    x = "Females = 0               Males = 1",
+    y = "Voters"
+  ) +
+  theme_minimal()
+        
+
+    ```
+
+3.  **Suppose we want to test two hypotheses on the relationships of two pairs of variables**. **Please use the appropriate type of graphs we learned to visualize these two pairs of variables. Briefly describe the graph you plot, and answer: Does the graph we create from the data support the hypothesis?**
+
+    \(1\) Hypothesis#1: The more years of education (edu) a person completed, the higher income (income_10) they earn. **(7.5%)**
+
+    ```{r}
+
+     # I believe that this box plot does support the hypothesis. Higher levels of
+  # income do seem to correlate with higher levels of educational attainment.
+    
+  ESS_Polity3 <- na.omit(ESS_Polity2)
+  
+ ggplot(ESS_Polity3, aes(x = as.factor(income_10), y = edu)) +
+  geom_boxplot() +
+  labs(
+    title = "Distribution of Education by Income",
+    x = "Income (1000s of euros)",
+    y = "Educational Attainment"
+  ) +
+  theme_minimal()   
+    
+    
+    ```
+
+    \(2\) Hypothesis#2: There is a gender disparity (male) in voting behavior (vote). (Either men are more likely to vote, or women are more likely to vote). **(7.5%)**
+
+    ```{r}
+    #type of your code/command here.
+    
+    # The comparison of number of female vs male voters does seem to support 
+  #  the hypothesis that voting behavior has a gender disparity in 2010. 
+  #  However, we do not know the total numbers of each gender. This would be
+  #  needed to support the behavior hypothesis - i.e. maybe there are fewer males
+  #  and that is the reason the counts are smaller rather than a lack of voting.
+    
+    ESS_Polity3 <- na.omit(ESS_Polity2)
+  
+
+    ggplot(data = ESS_Polity3) + (mapping = aes(x = male, y = vote, fill=male)) +
+  geom_col() + 
+  labs(
+    title = "ESS Chart of Female vs male Voters",
+    x = "Females = 0               Males = 1",
+    y = "Voters"
+  ) +
+  theme_minimal()
+
+    
+    ```
+
+## Part 2. Comparing between Partial and Whole, and among Groups (30% of the total grade)
+
+In this part, we will use the clean version of the Australian public opinion poll on Same-Sex Marriage to generate graphs and plots. **You may need to do the data transformation or mutation needed to help graphing.**
+
+1.  Read in data. **(2.5%)**
+
+    ```{r}
+    #type of your code/command here.
+    
+     Austr_data3 <- read_csv("_data/australian_data - australian_data.csv")
+    View(Austr_data3)
+    Austr_data4 <- subset(Austr_data3, select = -c(District, Division))
+    Austr_total <- Austr_data4 %>%
+            summarize(Yes = sum(Yes), No = sum(No), Illegible = sum(Illegible), `
+            No Response` = sum(`No Response`))
+    #pivot long with new col names    
+    Austr_long1 <- pivot_longer(Austr_total, cols = everything(), names_to = "Response", values_to = "Total")
+
+    
+    ```
+
+2.  Use a barplot to graph the Australian data based on their responses: yes, no, illegible, and no response. The y-axis should be the count of responses, and each response should be represented by one individual bar (so there should be four bars). **(7.5%)**
+
+    (you can use either geom_bar() or geom_col())
+
+    ```{r}
+    #type of your code/command here.
+    
+    bar_plot <- ggplot(Austr_long1, aes(x = Total, y = Response)) +
+  geom_bar(stat = "identity", fill = "blue", color = "black") +
+  labs(
+    title = "Bar Plot of Response",
+    x = "Total",
+    y = "Responses"
+  ) + 
+      theme_classic()
+    
+    print(bar_plot)
+    ```
+
+3.  The previous graph only shows the difference in amount. Let's create a stacked-to-100% barplot to show the proportion of each of the four responses (by % of the total response). **(7.5%)**
+
+    (you can use either geom_bar() or geom_col())
+
+    ```{r}
+    #type of your code/command here.
+    
+    Austr_long <- data.frame(
+  Response = rep(c("Yes", "No", "Illegible", "No Response"), each = 1),
+  proportion = c(0.488, 0.305, 0.002, 0.205)
+)
+
+# Plotting the bar chart
+ggplot(Austr_long, aes(x = 1, y = proportion, fill = Response)) +
+  geom_col(position = "stack") +
+  labs(
+    title = "Proportions Stacked to 1.00",
+    x = "Response",
+    y = "Proportion"
+  ) +
+  scale_fill_manual(values = c("Yes" = "blue", "No" = "green", "Illegible" = "orange", "No Response" = "red")) +
+  theme_minimal()
+    
+    ```
+
+4.  Let's see if there's a relationship between Division and Response - that is, are certain divisions more likely to respond one way compared to other divisions? Again, we will use barplot(s) to present the visualization. **(12.5%)**
+
+    (you can use either geom_bar() or geom_col())
+
+    ```{r}
+    #type of your code/command here.
+    
+     Austr_data3 <- read_csv("_data/australian_data - australian_data.csv")
+    
+    Austr_data5 <- subset(Austr_data3, select = -c(District))
+   
+   Austr_div <- Austr_data5 %>%
+  group_by(Division) %>%
+  summarize(Yes = sum(Yes), No = sum(No), Illegible = sum(Illegible), `No Response` = sum(`No Response`))
+    Austr_div$Division <- gsub(" Divisions", " ", as.character(Austr_div$Division))
+   
+   #get proportions for each division and variable
+   
+   Austr_div <- Austr_div %>%
+  mutate(Total = Yes + No + Illegible + `No Response`)
+   
+   Austr_div$Yes_prop <- Austr_div$Yes / Austr_div$Total
+   Austr_div$No_prop <- Austr_div$No / Austr_div$Total
+   Austr_div$Illegible_prop <- Austr_div$Illegible /   Austr_div$Total
+   Austr_div$NoResponse_prop <- Austr_div$'No Response' / Austr_div$Total
+
+   #pivot long with new col names    
+
+   Austr_div1 <- Austr_div %>% select(-c(Yes, No, Illegible,'Total', `No Response`))
+   
+
+# chart for No_prop votes
+ggplot(Austr_div1, aes(x = Division, y = No_prop, fill = Division)) +
+  theme(axis.text.x=element_text(angle=90)) +
+    scale_y_continuous(labels= scales::percent) +
+  geom_bar(stat = "identity") +
+  labs(
+    title = "Proportions of Responses for No Votes",
+    x = "Division",
+    y = "Proportion"
+  ) 
+    
+# chart for Yes_prop votes
+ggplot(Austr_div1, aes(x = Division, y = Yes_prop, fill = Division)) +
+  theme(axis.text.x=element_text(angle=90)) +
+   scale_y_continuous(labels= scales::percent) +
+  geom_bar(stat = "identity") +
+  labs(
+    title = "Proportions of Responses for Yes Votes",
+    x = "Division",
+    y = "Proportion"
+  ) 
+ 
+# chart for Illegible_prop votes
+ggplot(Austr_div1, aes(x = Division, y = Illegible_prop, fill = Division)) +
+  theme(axis.text.x=element_text(angle=90)) +
+  scale_y_continuous(labels= scales::percent) +
+  geom_bar(stat = "identity") +
+  labs(
+    title = "Proportions of Responses for Illegible Votes",
+    x = "Division",
+    y = "Proportion"
+  )    
+  
+# chart for NoResponse_prop votes
+ggplot(Austr_div1, aes(x = Division, y = NoResponse_prop, fill = Division)) +
+  theme(axis.text.x=element_text(angle=90)) +
+   scale_y_continuous(labels= scales::percent) +
+  geom_bar(stat = "identity") +
+  labs(
+    title = "Proportions of Responses for Illegible Votes",
+    x = "Division",
+    y = "Proportion"
+  )
+    
+    ```
+
+## Part 3. Practice plotting with a dataset of your choice (25% of the total grade)
+
+In this part, you will choose data of your interests for graphing and plotting. This data can be tidy/ready-to-be-used or raw data that needs cleaning. If the data is very large (for example, more than 20 columns), you should definitely subset the data by selecting less than 10 variables of your interests to avoid taking too much room in your R memory.
+
+1.  Include a link to the data page (this page should include the introduction or description and the link to download this dataset). **(2%)**
+
+COVID-19 Reporting : The COVID-19 Dashboard includes data on city/town COVID-19 activity, confirmed and probable cases of COVID-19, confirmed and probable deaths related to COVID-19, and the demographic characteristics of cases and deaths.
+  
+  https://www.mass.gov/info-details/covid-19-reporting
+
+
+2.  Read the data you choose and briefly answer the following questions. (Optional: you may need to subset, clean, and transform the data if necessary). **(8%)**
+
+    ```{r}
+    #type of your code/command here.
+    
+     Covid19_maweek <- read_excel("_data/covid-19-dashboard-10-19-23.xlsx", sheet = "Weekly Cases and Deaths")
+View(Covid19_maweek)
+str(Covid19_maweek)
+as_tibble(Covid19_maweek)
+names(Covid19_maweek)[4] ="Deaths"
+names(Covid19_maweek)[7] ="Cases"
+names(Covid19_maweek)[3] ="WeekEnd"
+Covid19_maweek$WeekEnd <- ymd(Covid19_maweek$WeekEnd)
+write_csv(Covid19_maweek, file = "_data/Covid19_maweek.csv")
+
+    
+    ```
+
+    \(1\) what is the structure (dimension) of the data;
+   tibble [191 × 10] (S3: tbl_df/tbl/data.frame)
+
+    \(2\) what is the unit of observation?
+    unit of observation is  COVID19 Cases and Deaths in MA across multiple years
+
+    \(3\) what does each column mean in this data?
+    Columns have logical names for the variables:
+    Season - current year 23-24
+    Week Start Date - date
+    Week End Date - date
+    Confirmed Deaths - from COVID19 count from MA DPH
+    Probable Deaths - From COVID19 count from MA DPH
+    Confirmed and probable deaths - from COVID19 count from MA DPH
+    Confirmed Cases - of COVID19 count from MA DPH
+    Probable Cases - of COVID19 count from MA DPH
+    Confirmed and probable cases - of COVID19 count from MA DPH
+    Last Updated - most recent publish dat
+
+3.  Choose two columns/variables of your interests. Plot one univariate graph for each of the variables. **(5%)**
+
+    ```{r}
+    #type of your code/command here.
+    
+    plot_cases <- ggplot(Covid19_maweek, aes(x = WeekEnd, y = Cases)) +
+  geom_point(color = "blue") +
+  labs(title = "COVID-19 Confirmed Cases by Week in MA", x = "Weeks", y = "Confirmed Cases")
+    
+print(plot_cases)
+
+# create scatter plot for COVID cases
+plot_deaths <- ggplot(Covid19_maweek, aes(x = WeekEnd, y = Deaths, color = Cases)) +
+  geom_point(color = "red") +
+  labs(title = "COVID-19 Confirmed Deaths by Week in MA", x = "Weeks", y = "Confirmed Deaths")
+
+print(plot_deaths)
+    
+    ```
+
+```{=html} 
+<!-- -->
+```
+4.  Choose a pair of variables you suspect or hypothesize may be correlated and a graph (scatter plot or barplot) using them. Based on the visual evidence, do you see any potential correlation between the two variables **(10%)**
+
+    ```{r}
+    # type of your code/command here.
+    
+  plot_cases <- ggplot(Covid19_maweek, aes(x = WeekEnd)) +
+  geom_line(aes(y = Cases, color = "Cases"), size = .5, linetype = "solid") +
+  geom_line(aes(y = Deaths * 50, color = "Deaths"), size = .5, linetype = "solid") +
+  labs(title = "COVID-19 Cases and Deaths (Scaled) Over Time in MA", x = "Date", y = "Cases") + 
+  scale_color_manual(name = "Metric", values = c("Cases" = "blue", "Deaths" = "red")) +
+  scale_y_continuous(sec.axis = sec_axis(~./10, name = "Deaths (scaled x 50)"))
+
+print(plot_cases)  
+    
+    
+    ```
+
+## Appendix: sources for data to be used in Part 3
+
+**Here are some online sources and popular Online Dataset Hub:**
+
+1.  Many US governments (usually at the federal and state levels),  bureaus, and departments have open data archives on their websites, allowing the public to access, download, and use them. Just use Google to search for them.
+
+```{=html}
+<!-- -->
+```
+2.  [**The Harvard Dataverse Repository**](https://dataverse.harvard.edu/) is a free data repository open to all researchers from any discipline, inside and outside the Harvard community, where you can share, archive, cite, access, and explore research data. Each individual Dataverse collection is a customizable collection of datasets (or a virtual repository) for organizing, managing, and showcasing datasets.
+
+```{=html}
+<!-- -->
+```
+3.  [**Inter-university Consortium for Political and Social Research (ICPSR)**](https://www.icpsr.umich.edu/web/pages/ICPSR/index.html) of the University of Michigan-Ann Arbor provides leadership and training in data access, curation, and methods of analysis for the social science research community. 
+
+```{=html}
+<!-- -->
+```
+4.  **UN: <https://data.un.org/>**
+
+```{=html}
+<!-- -->
+```
+5.  [**OECD Data**](https://data.oecd.org/):  economic and development data of the most developed countries in the world.
+
+```{=html}
+<!-- -->
+```
+6.  The upper five sources are mainly for social science data; **there is another very big community and open data archives for machine-learning and data science: [Kaggle](https://www.kaggle.com/datasets).**
